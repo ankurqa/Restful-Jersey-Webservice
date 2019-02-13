@@ -12,7 +12,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-
+import java.util.ArrayList;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.FormParam;
@@ -22,6 +22,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 
 
@@ -91,33 +94,52 @@ public class Hello {
     @Produces(MediaType.TEXT_PLAIN)
     public Response viewall() throws URISyntaxException {
     	String output = "";
+    	JSONArray jsonArray = new JSONArray();
+    	JSONObject jsonobj = new JSONObject();
     	try{  
     		Class.forName("com.mysql.jdbc.Driver");  
     		Connection con=DriverManager.getConnection(  
     		"jdbc:mysql://localhost:3306/jersey","root","ankurmangal");  
     	
     		Statement stmt=con.createStatement();  
-    		ResultSet rs=stmt.executeQuery("select * from UserComments");  
-    		while(rs.next())  
-    		{
-    			output += rs.getString(1) + " : " + rs.getString(2) + "\n";
-    		}
-    		con.close();
-    		return Response.status(200).entity(output).build();	
+    		ResultSet rs1=stmt.executeQuery("select DISTINCT name from UserComments");
+    		ArrayList<String> name = new ArrayList<String>();
+    		
+    			  //output="<html><body style="+"background-color:powderblue;"+">";
+    			  while(rs1.next()) 
+    			  {  
+    	name.add(rs1.getString(1));	
+    	
+    			  }
+    			  for(int j=0;j<name.size();j++) {
+    			  ResultSet rs2 = stmt.executeQuery("Select comment from UserComments where name='"+name.get(j)+"'");
+    				  //ar.add(rs1.getString(1));
+    			  ArrayList<String> ar = new ArrayList<String>();
+    				  while(rs2.next())
+    				  {
+    					  
+    					  ar.add(rs2.getString(1));
+    				  }
+    				  jsonobj.put(name.get(j), ar);
+    				  
+    				  
+    			  }
+    			  jsonArray.put(jsonobj);
+    			  return Response.status(200).entity(jsonArray.toString()).build();	
     		}catch(Exception e){ System.out.println(e);}  
     		  
-//    	URI location = new URI("http://localhost:8014/RestJersey/index.html");
-//    	return Response.seeOther(location).build(); 
+
     	
-    	return null;
+return null;
     }
     @GET
     @Path("/YourComments")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response viewYourComments() throws URISyntaxException {
     	String output = "";
     	String name="";
-    	
+    	JSONArray jsonArray = new JSONArray();
+    	JSONObject jsonobj = new JSONObject();
     	
     	
     	try{  
@@ -134,24 +156,28 @@ public class Hello {
     		PreparedStatement ps = con.prepareStatement(query);
     		ps.setString(1,Email);
     		ResultSet rs = ps.executeQuery();
-            
     		while(rs.next())  
     		{
     			
     			name = rs.getString(1);
-    		}
-    	
-    		ResultSet rs1=stmt.executeQuery("select * from UserComments where name='"+name+"'");
-    		while(rs1.next())  
-    		{
     			
-    			output += rs1.getString(1) + " : " + rs1.getString(2) + "\n";
-    		}
+}
+    		ArrayList<String> ar = new ArrayList<String>();
+    		ResultSet rs1=stmt.executeQuery("select * from UserComments where name='"+name+"'");
+		
+			  //output="<html><body style="+"background-color:powderblue;"+">";
+			  while(rs1.next()) 
+			  { 
+				  //ar.add(rs1.getString(1));
+				  ar.add(rs1.getString(2));
+			}
+			  jsonobj.put(name, ar);
+			  jsonArray.put(jsonobj);
     		con.close();
-    		return Response.status(200).entity(output).build();	
+    		return Response.status(200).entity(jsonArray.toString()).build();	
     		}catch(Exception e){ System.out.println(e);}  
 
-    	return null;
+return null;
     }
     @POST
     @Path("/AddComment")
