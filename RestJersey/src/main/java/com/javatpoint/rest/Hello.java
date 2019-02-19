@@ -91,42 +91,27 @@ public class Hello {
     }
     @GET
     @Path("/viewall")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response viewall() throws URISyntaxException {
     	String output = "";
-    	JSONArray jsonArray = new JSONArray();
-    	JSONObject jsonobj = new JSONObject();
+    	JSONArray jArray = new JSONArray();
+    	
     	try{  
     		Class.forName("com.mysql.jdbc.Driver");  
     		Connection con=DriverManager.getConnection(  
     		"jdbc:mysql://localhost:3306/jersey","root","ankurmangal");  
     	
     		Statement stmt=con.createStatement();  
-    		ResultSet rs1=stmt.executeQuery("select DISTINCT name from UserComments");
-    		ArrayList<String> name = new ArrayList<String>();
-    		
-    			  //output="<html><body style="+"background-color:powderblue;"+">";
-    			  while(rs1.next()) 
-    			  {  
-    	name.add(rs1.getString(1));	
-    	
-    			  }
-    			  for(int j=0;j<name.size();j++) {
-    			  ResultSet rs2 = stmt.executeQuery("Select comment from UserComments where name='"+name.get(j)+"'");
-    				  //ar.add(rs1.getString(1));
-    			  ArrayList<String> ar = new ArrayList<String>();
-    				  while(rs2.next())
-    				  {
-    					  
-    					  ar.add(rs2.getString(1));
-    				  }
-    				  jsonobj.put(name.get(j), ar);
-    				  
-    				  
-    			  }
-    			  jsonArray.put(jsonobj);
-    			  return Response.status(200).entity(jsonArray.toString()).build();	
-    		}catch(Exception e){ System.out.println(e);}  
+    		ResultSet rs1 = stmt.executeQuery("select * from UserComments");
+    		while(rs1.next())
+    		{
+    			JSONObject jobj = new JSONObject();
+    			jobj.put("Name",rs1.getString(1));
+    			jobj.put("Comment", rs1.getString(2));
+    			jArray.put(jobj);
+    		}
+			  return Response.status(200).entity(jArray.toString()).build();
+}catch(Exception e){ System.out.println(e);} 
     		  
 
     	
@@ -138,8 +123,8 @@ return null;
     public Response viewYourComments() throws URISyntaxException {
     	String output = "";
     	String name="";
-    	JSONArray jsonArray = new JSONArray();
-    	JSONObject jsonobj = new JSONObject();
+    	JSONArray jArray = new JSONArray();
+    	
     	
     	
     	try{  
@@ -148,34 +133,26 @@ return null;
     		"jdbc:mysql://localhost:3306/jersey","root","ankurmangal");  
     	
     		Statement stmt=con.createStatement();
-    		
-//    		String query = "select name from User where email ="+Email;
-//    		ResultSet rs=stmt.executeQuery(query); 
-    			
     		String query = "select name from AddUser where email =?";
     		PreparedStatement ps = con.prepareStatement(query);
     		ps.setString(1,Email);
     		ResultSet rs = ps.executeQuery();
     		while(rs.next())  
     		{
-    			
-    			name = rs.getString(1);
-    			
-}
-    		ArrayList<String> ar = new ArrayList<String>();
+    			name = rs.getString(1);	
+    		}
     		ResultSet rs1=stmt.executeQuery("select * from UserComments where name='"+name+"'");
-		
-			  //output="<html><body style="+"background-color:powderblue;"+">";
 			  while(rs1.next()) 
 			  { 
-				  //ar.add(rs1.getString(1));
-				  ar.add(rs1.getString(2));
+				  JSONObject jobj = new JSONObject();
+				  jobj.put("Name",rs1.getString(1));
+				  jobj.put("Comment",rs1.getString(2));
+				  jArray.put(jobj);
 			}
-			  jsonobj.put(name, ar);
-			  jsonArray.put(jsonobj);
-    		con.close();
-    		return Response.status(200).entity(jsonArray.toString()).build();	
-    		}catch(Exception e){ System.out.println(e);}  
+  		con.close();
+  		return Response.status(200).entity(jArray.toString()).build();	
+  		}catch(Exception e){ System.out.println(e);}  
+
 
 return null;
     }
